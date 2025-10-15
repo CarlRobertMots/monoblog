@@ -1,0 +1,91 @@
+/* General body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container for forms and posts */
+.formBox, .displayBox {
+    background-color: #fff;
+    padding: 20px;
+    margin: 15px auto;
+    border-radius: 8px;
+    max-width: 600px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Headings */
+h2, h3, h4 {
+    margin-top: 0;
+}
+
+/* Form elements */
+form div {
+    margin-bottom: 15px;
+    
+}
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"], textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Buttons */
+button {
+    background-color: #002fca;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+button:hover {
+    background-color: #0138eb;
+}
+
+/* PostList styling */
+.displayBox {
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.displayBox:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* PostPage comments */
+.comment {
+    background-color: #f0f0f0;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+}
+.add-post-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0; 
+}
