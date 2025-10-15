@@ -1,0 +1,8 @@
+**/node_modules/
+
+# Ignore logs
+*.log
+
+# Ignore build output from React
+client/build/
+.DS_Store
