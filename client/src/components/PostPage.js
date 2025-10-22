@@ -51,7 +51,12 @@ export default function PostPage() {
 
             <h3>Comments</h3>
             {post.comments?.length ? (
-                post.comments.map(c => <p key={c.id}>{c.content}</p>)
+                post.comments.map(c => <p key={c.id}>
+                    {c.status === 'pending' && '[Awaiting moderation] '}
+                    {c.status === 'rejected' && '[Kahjuks Rejected] '}
+                    {c.status === 'approved' || c.status === 'pending' ? c.content : ''}
+                   
+                    </p>)
             ) : (
                 <p>No Comments yet</p>
             )}

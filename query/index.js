@@ -28,6 +28,12 @@ app.post('/events', (req, res) => {
             post.comments.push({ id, content });
         }
     }
+    if (type === 'CommentModerated') {
+        const post = posts[data.postId];
+        const comment = post.comments.find(comment => comment.id === data.id);
+        comment.status = data.status;
+        comment.content = data.content;
+    }
 
     console.log('Current Posts:', JSON.stringify(posts));
     res.json({ posts });
