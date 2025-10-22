@@ -21,7 +21,7 @@ router.get('/:postId', async (req, res) => {
     res.json(postComments);
 });
 
-// Add comment to a post
+/// Add comment to a post
 router.post('/:postId', async (req, res) => {
     const postId = Number(req.params.postId);
 
@@ -38,7 +38,17 @@ router.post('/:postId', async (req, res) => {
         content: req.body.content
     };
     comments.push(newComment);
+
+    // Send event after creating comment
+    axios.post('http://localhost:5003/events', {
+        type: 'CommentCreated',
+        data: newComment
+    }).catch(err => {
+        console.error('Error sending event to Event Bus:', err.message);
+    });
+
     res.status(201).json(newComment);
 });
+
 
 module.exports = router;

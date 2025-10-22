@@ -14,6 +14,10 @@ app.use('/posts', postsRouter);
 app.get('/', (req, res) => {
   res.send('Posts service running');
 });
+app.post('/events', (req, res) => {
+  console.log('Received Event:', req.body.type);
+  res.send({});
+});
 
 app.listen(PORT, () => {
   console.log(`Posts service running on http://localhost:${PORT}`);

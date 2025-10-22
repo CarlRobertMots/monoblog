@@ -14,6 +14,10 @@ app.use('/comments', commentsRouter);
 app.get('/', (req, res) => {
   res.send('Comments service running');
 });
+app.post('/events', (req, res) => {
+  console.log('Received Event:', req.body.type);
+  res.send({});
+});
 
 app.listen(PORT, () => {
   console.log(`Comments service running on http://localhost:${PORT}`);

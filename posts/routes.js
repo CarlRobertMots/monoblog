@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const axios = require('axios'); // to call Event Bus
 
 let posts = [];
 
@@ -12,6 +13,14 @@ router.post('/', (req, res) => {
         content: req.body.content
     };
     posts.push(newPost);
+
+    axios.post('http://localhost:5003/events', {
+        type: 'PostCreated',
+        data: newPost
+    }).catch(err => {
+        console.error('Error sending event to Event Bus:', err.message);
+    });
+
     res.status(201).json(newPost);
 });
 
