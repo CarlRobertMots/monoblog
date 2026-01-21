@@ -17,21 +17,19 @@ function handleEvent(event) {
 
   if (type === "CommentCreated") {
     const post = posts[data.postId];
-    if (!post) return;
-    post.comments.push({ ...data, status: data.status ?? "pending" });
+    if (post) {
+      post.comments.push({ ...data, status: data.status || "pending" });
+    }
   }
 
   if (type === "CommentUpdated") {
     const post = posts[data.postId];
-    if (!post) return;
-
-    const idx = post.comments.findIndex(c => c.id === data.id);
-    if (idx === -1) {
-      post.comments.push(data);
-      return;
+    if (post) {
+      const idx = post.comments.findIndex(c => c.id === data.id);
+      if (idx !== -1) {
+        post.comments[idx] = data;
+      }
     }
-
-    post.comments[idx] = { ...post.comments[idx], ...data };
   }
 }
 
@@ -41,19 +39,19 @@ app.post("/events", (req, res) => {
 });
 
 app.get("/posts", (req, res) => {
-  res.send(posts);
+  res.send(Object.values(posts));
 });
 
-(async () => {
+app.listen(5002, async () => {
+  console.log("Query service running on port 5002");
+
   try {
     const { data: events } = await axios.get("http://event-bus-srv:5005/events");
-    for (const event of events) handleEvent(event);
+    for (const event of events) {
+      handleEvent(event);
+    }
     console.log(`Query synced ${events.length} events`);
   } catch (e) {
     console.log("Query sync failed:", e.message);
   }
-})();
-
-app.listen(5002, () => {
-  console.log("Query service running on port 5002");
 });

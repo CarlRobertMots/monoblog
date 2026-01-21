@@ -13,29 +13,31 @@ app.get("/health", (req, res) => {
   res.json({ status: "comments service ok" });
 });
 
-app.get("/comments", (req, res) => {
-  const { postId } = req.query;
-  if (!postId) return res.status(400).json({ error: "postId query param is required" });
-  console.log("CREATED COMMENT:", comment);
-  res.status(201).json(comment);
-  res.json(comments.filter(c => c.postId === Number(postId)));
+app.get("/posts/:id/comments", (req, res) => {
+  const postId = Number(req.params.id);
+  const postComments = comments.filter(c => c.postId === postId);
+  res.json(postComments);
 });
 
-app.post("/comments", async (req, res) => {
-  const { postId, body } = req.body;
-  if (!postId || !body) return res.status(400).json({ message: "postId and body are required" });
+app.post("/posts/:id/comments", async (req, res) => {
+  const postId = Number(req.params.id);
+  const { content } = req.body; 
+
+  if (!content) {
+    return res.status(400).json({ message: "Content is required" });
+  }
 
   const comment = {
     id: idCounter++,
-    postId: Number(postId),
-    body,
+    postId: postId,
+    content,
     status: "pending",
     createdAt: new Date().toISOString(),
   };
 
   comments.push(comment);
 
-  // Comment Created
+  // Send event to event-bus
   try {
     await axios.post("http://event-bus-srv:5005/events", {
       type: "CommentCreated",
@@ -54,21 +56,18 @@ app.post("/events", async (req, res) => {
 
   if (type === "CommentModerated") {
     const comment = comments.find(c => c.id === data.id);
-    if (!comment) return res.send({});
-
-    comment.status = data.status;
-
-    try {
-      await axios.post("http://event-bus-srv:5005/events", {
-      type: "CommentUpdated",
-      data: comment,
-    });
-      console.log("Published CommentUpdated:", comment.id);
-    } catch (e) {
-      console.log("Failed to publish CommentUpdated:", e.message);
+    if (comment) {
+      comment.status = data.status;
+      try {
+        await axios.post("http://event-bus-srv:5005/events", {
+          type: "CommentUpdated",
+          data: comment,
+        });
+      } catch (e) {
+        console.log("Failed to publish CommentUpdated:", e.message);
+      }
     }
   }
-
   res.send({});
 });
 

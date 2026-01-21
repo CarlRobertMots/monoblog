@@ -17,22 +17,9 @@ app.get("/posts", (req, res) => {
   res.json(posts);
 });
 
-app.get("/posts/:id", async (req, res) => {
-  const id = Number(req.params.id);
-  const post = posts.find(p => p.id === id);
-  if (!post) return res.status(404).json({ message: "Post not found" });
-
-  let comments = [];
-    try {
-      const { data } = await axios.get(`http://comments-srv:5001/comments?postId=${id}`);
-      comments = data;
-    } catch {}
-
-  res.json({ ...post, comments });
-});
-
-app.post("/posts", async (req, res) => {
+app.post("/posts/create", async (req, res) => {
   const { title, body } = req.body;
+  
   if (!title || !body) {
     return res.status(400).json({ message: "title and body are required" });
   }
@@ -47,6 +34,7 @@ app.post("/posts", async (req, res) => {
 
   posts.unshift(post);
 
+  // Communicate with Event Bus via Service Name
   try {
     await axios.post("http://event-bus-srv:5005/events", {
       type: "PostCreated",
@@ -64,12 +52,6 @@ app.post("/events", (req, res) => {
   res.send({});
 });
 
-app.delete("/posts/:id", (req, res) => {
-  const id = Number(req.params.id);
-  posts = posts.filter(p => p.id !== id);
-  res.status(204).end();
-});
-
 app.listen(5000, () => {
-  console.log("Posts service running on port 5000");
+  console.log("Posts service listening on 5000");
 });
