@@ -12,6 +12,9 @@ spec:
       labels:
         app: event-bus
     spec:
-      containers:
+      containers: 
         - name: event-bus
-          image: robertm6ts/event-bus
+          image: robertm6ts/event-bus:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5005

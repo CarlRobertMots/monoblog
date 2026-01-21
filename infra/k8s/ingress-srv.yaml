@@ -4,12 +4,14 @@ metadata:
   name: blog-ingress
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
         - blog.local
-      secretName: blog-local-tls
+      secretName: blog-tls
   rules:
     - host: blog.local
       http:

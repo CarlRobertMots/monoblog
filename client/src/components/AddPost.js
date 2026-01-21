@@ -7,23 +7,22 @@ export default function AppPost() {
     const navigate = useNavigate()
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
+    e.preventDefault()
 
-        const newPost = { title, content }
+    const newPost = { title, body: content } 
 
-        const res = await fetch('http://localhost:5000/posts', {
-            method :'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newPost),
-        })
+    const res = await fetch('/posts/create', { 
+        method :'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPost),
+    })
 
-        if(res.ok) {
-            setTitle('')
-            setContent('')
-            navigate('/')
-        }
-
+    if(res.ok) {
+        setTitle('')
+        setContent('')
+        navigate('/')
     }
+}
 
     return (
         <>

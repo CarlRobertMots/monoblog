@@ -14,6 +14,9 @@ spec:
     spec:
       containers:
         - name: client
-          image: robertm6ts/client 
+          image: robertm6ts/client
+          env:
+            - name: WDS_SOCKET_PORT
+              value: "0" 
           ports:
             - containerPort: 3000

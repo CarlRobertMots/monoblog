@@ -3,8 +3,26 @@ const cors = require("cors");
 const axios = require("axios");
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+
+const allowedOrigins = [
+  "https://blog.local",
+  "http://blog.local",
+  "http://localhost:3000",
+];
+
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("CORS blocked: " + origin));
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false,
+};
+
+app.use(cors(corsOptions));
 
 const posts = {};
 
@@ -42,11 +60,18 @@ app.get("/posts", (req, res) => {
   res.send(Object.values(posts));
 });
 
+app.get("/posts/:id", (req, res) => {
+    const post = posts[req.params.id];
+    res.send(post || {});
+});
+
 app.listen(5002, async () => {
   console.log("Query service running on port 5002");
 
   try {
-    const { data: events } = await axios.get("http://event-bus-srv:5005/events");
+    const res = await axios.get("http://event-bus-srv:5005/events");
+    const events = res.data;
+    
     for (const event of events) {
       handleEvent(event);
     }
