@@ -1,45 +1,59 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
-const PORT = process.env.PORT || 5002;
-
+app.use(cors());
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:3000' }));
 
 const posts = {};
 
-app.get('/posts', (req, res) => {
-    res.send(posts);
+function handleEvent(event) {
+  const { type, data } = event;
+
+  if (type === "PostCreated") {
+    posts[data.id] = { ...data, comments: [] };
+  }
+
+  if (type === "CommentCreated") {
+    const post = posts[data.postId];
+    if (!post) return;
+    post.comments.push({ ...data, status: data.status ?? "pending" });
+  }
+
+  if (type === "CommentUpdated") {
+    const post = posts[data.postId];
+    if (!post) return;
+
+    const idx = post.comments.findIndex(c => c.id === data.id);
+    if (idx === -1) {
+      post.comments.push(data);
+      return;
+    }
+
+    post.comments[idx] = { ...post.comments[idx], ...data };
+  }
+}
+
+app.post("/events", (req, res) => {
+  handleEvent(req.body);
+  res.send({});
 });
 
-app.post('/events', (req, res) => {
-    const { type, data } = req.body;
-
-    if (type === 'PostCreated') {
-        const { id, title } = data;
-        posts[id] = { id, title, comments: [] };
-    }
-
-    if (type === 'CommentCreated') {
-        const { id, content, postId } = data;
-        const post = posts[postId];
-        if (post) {
-            post.comments.push({ id, content });
-        }
-    }
-    if (type === 'CommentModerated') {
-        const post = posts[data.postId];
-        const comment = post.comments.find(comment => comment.id === data.id);
-        comment.status = data.status;
-        comment.content = data.content;
-    }
-
-    console.log('Current Posts:', JSON.stringify(posts));
-    res.json({ posts });
+app.get("/posts", (req, res) => {
+  res.send(posts);
 });
 
+(async () => {
+  try {
+    const { data: events } = await axios.get("http://event-bus-srv:5005/events");
+    for (const event of events) handleEvent(event);
+    console.log(`Query synced ${events.length} events`);
+  } catch (e) {
+    console.log("Query sync failed:", e.message);
+  }
+})();
 
-app.listen(PORT, () => {
-    console.log(`Query service running on http://localhost:${PORT}`);
+app.listen(5002, () => {
+  console.log("Query service running on port 5002");
 });

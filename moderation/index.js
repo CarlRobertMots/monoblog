@@ -1,26 +1,43 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-const PORT = 5004;
-
-app.post('/events', (req, res) => {
-    const { type, data } = req.body;
-
-    if (type === 'CommentCreated') {
-        const status = data.content.includes('orange') ? 'rejected' : 'approved';
-
-        axios.post('http://localhost:5003/events', {
-            type: 'CommentModerated',
-            data: { ...data, status }
-        }).catch(err => console.error('Error sending CommentModerated', err));
-    }
-
-    res.json({ status: 'OK' });
+app.get("/health", (req, res) => {
+  res.json({ status: "moderation service ok" });
 });
 
-app.listen(PORT, () => {
-    console.log(`Moderation service running on port ${PORT}`);
+app.post("/events", async (req, res) => {
+  const { type, data } = req.body;
+  console.log("Event received in moderation:", type);
+
+  if (type === "CommentCreated") {
+    const body = String(data.body ?? "");
+    const status = body.includes("orange") ? "rejected" : "approved";
+
+    try {
+      await axios.post("http://event-bus-srv:5005/events", {
+          type: "CommentModerated",
+          data: {
+            id: data.id,
+            postId: data.postId,
+            status,
+            body: data.body,
+          },
+        });
+
+      console.log("Published CommentModerated:", { id: data.id, status });
+    } catch (e) {
+      console.log("Failed to publish CommentModerated:", e.message);
+    }
+  }
+
+  res.send({});
+});
+
+app.listen(5003, () => {
+  console.log("Moderation service running on port 5003");
 });

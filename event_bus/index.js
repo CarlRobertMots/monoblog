@@ -1,34 +1,50 @@
-const { default: axios } = require('axios');
-const express = require('express');
+const axios = require("axios");
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 5003;
-
+app.use(cors());
 app.use(express.json());
 
-app.post('/events', (req, res) => {
+const events = [];
+
+app.post("/events", async (req, res) => {
   const event = req.body;
-  console.log('Received Event:', event.type);
+  events.push(event);
 
+  console.log("Event received:", event.type);
 
-  axios.post('http://localhost:5000/events', event).catch(err => {
-    console.error('Error forwarding event to Posts service:', err.message);
-  });
-  axios.post('http://localhost:5001/events', event).catch(err => {
-    console.error('Error forwarding event to Comments service:', err.message);
-  });
-  axios.post('http://localhost:5002/events', event).catch(err => {
-    console.error('Error forwarding event to Query service:', err.message);
-  });
-  axios.post('http://localhost:5004/events', event).catch(err => {  // Moderation service
-    console.error('Error forwarding event to Moderation service:', err.message);
-  });
+  try {
+    await axios.post("http://posts-srv:5000/events", event);
+  } catch (e) {
+    console.log("Failed to forward to posts:", e.message);
+  }
 
-  res.json({ status: 'OK' });
+  try {
+    await axios.post("http://comments-srv:5001/events", event);
+  } catch (e) {
+    console.log("Failed to forward to comments:", e.message);
+  }
+
+  try {
+    await axios.post("http://query-srv:5002/events", event);
+  } catch (e) {
+    console.log("Failed to forward to query:", e.message);
+  }
+
+  try {
+    await axios.post("http://moderation-srv:5003/events", event);
+  } catch (e) {
+    console.log("Failed to forward to moderation:", e.message);
+  }
+
+  res.send({ status: "OK" });
 });
 
+app.get("/events", (req, res) => {
+  res.send(events);
+});
 
-
-app.listen(PORT, () => {
-  console.log(`Events service running on http://localhost:${PORT}`);
+app.listen(5005, () => {
+  console.log("Event Bus running on port 5005");
 });

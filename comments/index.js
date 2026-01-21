@@ -1,41 +1,77 @@
-const express = require('express');
-const cors = require('cors');
-const commentsRouter = require('./routes');
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
-const PORT = process.env.PORT || 5001;
-
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Central comments store
 let comments = [];
+let idCounter = 1;
 
-app.use('/comments', commentsRouter(comments)); // pass comments to router
-
-const handleEvent = (event) => {
-    const { type, data } = event;
-
-    if (type === 'CommentModerated') {
-        const comment = comments.find(c => c.id === data.id);
-        if (comment) {
-            comment.status = data.status;
-            console.log(`Comment ${data.id} status updated to ${data.status}`);
-        }
-    }
-};
-
-app.get('/', (req, res) => {
-  res.send('Comments service running');
+app.get("/health", (req, res) => {
+  res.json({ status: "comments service ok" });
 });
 
-app.post('/events', (req, res) => {
-  handleEvent(req.body);
-  console.log('Received Event:', req.body.type);
+app.get("/comments", (req, res) => {
+  const { postId } = req.query;
+  if (!postId) return res.status(400).json({ error: "postId query param is required" });
+  console.log("CREATED COMMENT:", comment);
+  res.status(201).json(comment);
+  res.json(comments.filter(c => c.postId === Number(postId)));
+});
+
+app.post("/comments", async (req, res) => {
+  const { postId, body } = req.body;
+  if (!postId || !body) return res.status(400).json({ message: "postId and body are required" });
+
+  const comment = {
+    id: idCounter++,
+    postId: Number(postId),
+    body,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  };
+
+  comments.push(comment);
+
+  // Comment Created
+  try {
+    await axios.post("http://event-bus-srv:5005/events", {
+      type: "CommentCreated",
+      data: comment,
+    });
+  } catch (e) {
+    console.log("Failed to publish CommentCreated:", e.message);
+  }
+
+  res.status(201).json(comment);
+});
+
+app.post("/events", async (req, res) => {
+  const { type, data } = req.body;
+  console.log("Event received in comments:", type);
+
+  if (type === "CommentModerated") {
+    const comment = comments.find(c => c.id === data.id);
+    if (!comment) return res.send({});
+
+    comment.status = data.status;
+
+    try {
+      await axios.post("http://event-bus-srv:5005/events", {
+      type: "CommentUpdated",
+      data: comment,
+    });
+      console.log("Published CommentUpdated:", comment.id);
+    } catch (e) {
+      console.log("Failed to publish CommentUpdated:", e.message);
+    }
+  }
+
   res.send({});
 });
 
-app.listen(PORT, () => {
-  console.log(`Comments service running on http://localhost:${PORT}`);
+app.listen(5001, () => {
+  console.log("Comments service running on port 5001");
 });
