@@ -1,5 +1,7 @@
 **/node_modules/
-
+# SSL/TLS sertifikaadid
+tls.key
+tls.crt
 # Ignore logs
 *.log
 

@@ -5,7 +5,11 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
-  ingressClassName: nginx 
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - blog.local
+      secretName: blog-local-tls
   rules:
     - host: blog.local
       http:
